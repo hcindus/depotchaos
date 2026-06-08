@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reggie Starr RS-79 POS System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2d5016;
+            --primary-light: #4a7c23;
+            --accent: #d4a574;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --text: #eaeaea;
+            --text-muted: #a0a0a0;
+            --danger: #c0392b;
+            --success: #27ae60;
+            --warning: #f39c12;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Splash Screen */
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out;
+        }
+        
+        #splash.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-logo {
+            width: 200px;
+            height: 200px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        
+        .splash-subtitle {
+            font-size: 18px;
+            color: var(--accent);
+        }
+        
+        /* Login Screen */
+        #loginScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+        }
+        
+        .login-box {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: var(--accent);
+        }
+        
+        .pin-display {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 32px;
+            letter-spacing: 15px;
+            margin-bottom: 30px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .pin-btn {
+            background: var(--primary);
+            border: none;
+            color: var(--text);
+            padding: 20px;
+            font-size: 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pin-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        
+        .pin-btn.clear {
+            background: var(--danger);
+        }
+        
+        .pin-btn.enter {
+            background: var(--success);
+            grid-column: span 2;
+        }
+        
+        .clerk-select {
+            margin-bottom: 20px;
+        }
+        
+        .clerk-select select {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: var(--bg-dark);
+            color: var(--text);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+        }
+        
+        /* Main POS Layout */
+        #posScreen {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: var(--bg-card);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .header-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .header-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .header-info {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .header-btn {
+            background: var(--primary);
+            border: none;
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .header-btn:hover {
+            background: var(--primary-light);
+        }
+        
+        .header-btn.danger {
+            background: var(--danger);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        /* Left Panel - Order List */
+        .order-panel {
+            width: 35%;
+            background: var(--bg-card);
+            border-right: 2px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .order-header {
+            padding: 15px;
+            background: var(--primary);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .order-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .order-item {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .order-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .order-item.selected {
+            background: var(--primary);
+        }
+        
+        .order-item-info {
+            flex: 1;
+        }
+        
+        .order-item-name {
+            font-weight: 500;
+        }
+        
+        .order-item-price {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .order-item-qty {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .qty-btn {
+            background: var(--primary);
+            border: none;
+            color: var(--text);
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .order-totals {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-top: 2px solid var(--primary);
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .total-row.grand {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid var(--primary);
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+        }
+        
+        .action-btn {
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.hold {
+            background: var(--warning);
+            color: #000;
+        }
+        
+        .action-btn.checkout {
+            background: var(--success);
+            color: #fff;
+            grid-column: span 2;
+        }
+        
+        /* Right Panel - Item Grid */
+        .items-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .category-tab {
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .category-tab.active {
+            background: var(--primary);
+        }
+        
+        .category-tab:hover {
+            border-color: var(--accent);
+        }
+        
+        .items-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+            align-content: start;
+        }
+        
+        .item-card {
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 150px;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .item-card .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .item-card .name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .item-card .price {
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: var(--accent);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 28px;
+            cursor: pointer;
+        }
+        
+        /* Checkout Modal */
+        .checkout-totals {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .checkout-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .checkout-total-row.total {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent);
+            padding-top: 10px;
+            border-top: 2px solid var(--primary);
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-btn {
+            background: var(--primary);
+            border: 2px solid transparent;
+            color: var(--text);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .payment-btn:hover {
+            border-color: var(--accent);
+        }
+        
+        .payment-btn.selected {
+            background: var(--accent);
+            color: #000;
+        }
+        
+        .tender-section {
+            margin-bottom: 20px;
+        }
+        
+        .tender-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tender-input input {
+            flex: 1;
+            padding: 15px;
+            font-size: 20px;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: var(--text);
+        }
+        
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .numpad-btn {
+            background: var(--primary);
+            border: none;
+            color: var(--text);
+            padding: 18px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .numpad-btn:hover {
+            background: var(--primary-light);
+        }
+        
+        .numpad-btn.wide {
+            grid-column: span 2;
+        }
+        
+        .numpad-btn.clear {
+            background: var(--danger);
+        }
+        
+        .complete-btn {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            padding: 20px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        /* Receipt */
+        .receipt {
+            background: #fff;
+            color: #000;
+            padding: 30px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #000;
+        }
+        
+        .receipt-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .receipt-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #000;
+            font-weight: bold;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .order-panel {
+                width: 100%;
+                height: 40%;
+                border-right: none;
+                border-bottom: 2px solid var(--primary);
+            }
+            
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-info {
+                display: none;
+            }
+            
+            .items-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .payment-methods {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal.active {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash">
+        <div class="splash-logo">👍</div>
+        <div class="splash-title">Reggie Starr</div>
+        <div class="splash-subtitle">RS-79 Point of Sale System</div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <div class="login-title">Staff Login</div>
+            <div class="clerk-select">
+                <select id="clerkSelect">
+                    <option value="">Select Clerk...</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="cashier1">Cashier 1</option>
+                    <option value="cashier2">Cashier 2</option>
+                </select>
+            </div>
+            <div class="pin-display" id="pinDisplay">_ _ _ _</div>
+            <div class="pin-keypad">
+                <button class="pin-btn" onclick="enterPin('1')">1</button>
+                <button class="pin-btn" onclick="enterPin('2')">2</button>
+                <button class="pin-btn" onclick="enterPin('3')">3</button>
+                <button class="pin-btn" onclick="enterPin('4')">4</button>
+                <button class="pin-btn" onclick="enterPin('5')">5</button>
+                <button class="pin-btn" onclick="enterPin('6')">6</button>
+                <button class="pin-btn" onclick="enterPin('7')">7</button>
+                <button class="pin-btn" onclick="enterPin('8')">8</button>
+                <button class="pin-btn" onclick="enterPin('9')">9</button>
+                <button class="pin-btn clear" onclick="clearPin()">C</button>
+                <button class="pin-btn" onclick="enterPin('0')">0</button>
+                <button class="pin-btn enter" onclick="submitLogin()">Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main POS Screen -->
+    <div id="posScreen">
+        <header class="header">
+            <div class="header-left">
+                <div class="header-logo">👍 Reggie Starr</div>
+                <div class="header-info">
+                    <span id="currentTime">00:00</span>
+                    <span id="currentClerk">Not logged in</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="showHeldOrders()">📋 Held Orders</button>
+                <button class="header-btn" onclick="showHistory()">📊 History</button>
+                <button class="header-btn danger" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Order Panel -->
+            <div class="order-panel">
+                <div class="order-header">
+                    <span>Current Order</span>
+                    <span id="orderNumber">#0001</span>
+                </div>
+                <div class="order-list" id="orderList">
+                    <!-- Order items will be added here -->
+                </div>
+                <div class="order-totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Tax (8.25%):</span>
+                        <span id="tax">$0.00</span>
+                    </div>
+                    <div class="total-row grand">
+                        <span>Total:</span>
+                        <span id="total">$0.00</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn hold" onclick="holdOrder()">Hold Order</button>
+                    <button class="action-btn checkout" onclick="showCheckout()">Checkout</button>
+                </div>
+            </div>
+
+            <!-- Items Panel -->
+            <div class="items-panel">
+                <div class="category-tabs" id="categoryTabs">
+                    <button class="category-tab active" onclick="selectCategory('grocery')">🛒 Grocery</button>
+                    <button class="category-tab" onclick="selectCategory('produce')">🥬 Produce</button>
+                    <button class="category-tab" onclick="selectCategory('deli')">🥪 Deli</button>
+                    <button class="category-tab" onclick="selectCategory('bakery')">🍞 Bakery</button>
+                    <button class="category-tab" onclick="selectCategory('beverages')">🥤 Beverages</button>
+                </div>
+                <div class="items-grid" id="itemsGrid">
+                    <!-- Items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Checkout</div>
+                <button class="modal-close" onclick="closeModal('checkoutModal')">×</button>
+            </div>
+            <div class="checkout-totals">
+                <div class="checkout-total-row">
+                    <span>Subtotal:</span>
+                    <span id="checkoutSubtotal">$0.00</span>
+                </div>
+                <div class="checkout-total-row">
+                    <span>Tax:</span>
+                    <span id="checkoutTax">$0.00</span>
+                </div>
+                <div class="checkout-total-row total">
+                    <span>Total Due:</span>
+                    <span id="checkoutTotal">$0.00</span>
+                </div>
+            </div>
+            <div class="payment-methods">
+                <button class="payment-btn selected" onclick="selectPayment('cash')">💵 Cash</button>
+                <button class="payment-btn" onclick="selectPayment('card')">💳 Card</button>
+                <button class="payment-btn" onclick="selectPayment('crypto')">₿ Crypto</button>
+                <button class="payment-btn" onclick="selectPayment('giftcard')">🎁 Gift Card</button>
+                <button class="payment-btn" onclick="selectPayment('storecredit')">💰 Store Credit</button>
+                <button class="payment-btn" onclick="selectPayment('check')">📝 Check</button>
+            </div>
+            <div class="tender-section">
+                <div class="tender-input">
+                    <input type="text" id="tenderAmount" placeholder="0.00" readonly>
+                </div>
+                <div class="numpad">
+                    <button class="numpad-btn" onclick="enterTender('7')">7</button>
+                    <button class="numpad-btn" onclick="enterTender('8')">8</button>
+                    <button class="numpad-btn" onclick="enterTender('9')">9</button>
+                    <button class="numpad-btn clear" onclick="clearTender()">C</button>
+                    <button class="numpad-btn" onclick="enterTender('4')">4</button>
+                    <button class="numpad-btn" onclick="enterTender('5')">5</button>
+                    <button class="numpad-btn" onclick="enterTender('6')">6</button>
+                    <button class="numpad-btn" onclick="backspaceTender()">⌫</button>
+                    <button class="numpad-btn" onclick="enterTender('1')">1</button>
+                    <button class="numpad-btn" onclick="enterTender('2')">2</button>
+                    <button class="numpad-btn" onclick="enterTender('3')">3</button>
+                    <button class="numpad-btn wide" onclick="enterTender('0')">0</button>
+                    <button class="numpad-btn" onclick="enterTender('00')">00</button>
+                    <button class="numpad-btn" onclick="enterTender('.')">.</button>
+                </div>
+            </div>
+            <button class="complete-btn" onclick="completeCheckout()">Complete Transaction</button>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Receipt</div>
+                <button class="modal-close" onclick="closeModal('receiptModal')">×</button>
+            </div>
+            <div id="receiptContent"></div>
+            <button class="complete-btn" onclick="printReceipt()" style="margin-top: 20px;">🖨️ Print</button>
+            <button class="complete-btn" onclick="closeReceipt()" style="background: var(--primary); margin-top: 10px;">New Order</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== DATA STORE =====
+        const store = {
+            currentOrder: [],
+            heldOrders: [],
+            orderHistory: [],
+            currentClerk: null,
+            orderCounter: 1001,
+            taxRate: 0.0825,
+            currentCategory: 'grocery',
+            selectedPayment: 'cash',
+            tenderAmount: '',
+            pinBuffer: ''
+        };
+
+        // ===== ITEMS DATABASE =====
+        const itemsDB = {
+            grocery: [
+                { id: 'g1', name: 'White Rice 5lb', price: 8.99, icon: '🍚' },
+                { id: 'g2', name: 'Pasta 16oz', price: 2.49, icon: '🍝' },
+                { id: 'g3', name: 'Olive Oil 32oz', price: 12.99, icon: '🫒' },
+                { id: 'g4', name: 'Cereal Box', price: 4.99, icon: '🥣' },
+                { id: 'g5', name: 'Coffee 12oz', price: 8.49, icon: '☕' },
+                { id: 'g6', name: 'Sugar 4lb', price: 3.99, icon: '🧂' }
+            ],
+            produce: [
+                { id: 'p1', name: 'Bananas /lb', price: 0.69, icon: '🍌' },
+                { id: 'p2', name: 'Apples /lb', price: 1.99, icon: '🍎' },
+                { id: 'p3', name: 'Lettuce Head', price: 2.49, icon: '🥬' },
+                { id: 'p4', name: 'Tomatoes /lb', price: 2.99, icon: '🍅' },
+                { id: 'p5', name: 'Potatoes 5lb', price: 4.99, icon: '🥔' },
+                { id: 'p6', name: 'Onions 3lb', price: 3.49, icon: '🧅' }
+            ],
+            deli: [
+                { id: 'd1', name: 'Turkey Sandwich', price: 7.99, icon: '🥪' },
+                { id: 'd2', name: 'Ham & Cheese', price: 8.49, icon: '🧀' },
+                { id: 'd3', name: 'Roast Beef', price: 9.99, icon: '🥩' },
+                { id: 'd4', name: 'Chicken Salad', price: 6.99, icon: '🥗' },
+                { id: 'd5', name: 'Soup Bowl', price: 5.49, icon: '🍲' },
+                { id: 'd6', name: 'Salad Large', price: 8.99, icon: '🥗' }
+            ],
+            bakery: [
+                { id: 'b1', name: 'Baguette', price: 2.99, icon: '🥖' },
+                { id: 'b2', name: 'Croissant', price: 2.49, icon: '🥐' },
+                { id: 'b3', name: 'Muffin', price: 2.99, icon: '🧁' },
+                { id: 'b4', name: 'Donut', price: 1.49, icon: '🍩' },
+                { id: 'b5', name: 'Sourdough Loaf', price: 4.99, icon: '🍞' },
+                { id: 'b6', name: 'Cake Slice', price: 4.49, icon: '🍰' }
+            ],
+            beverages: [
+                { id: 'bv1', name: 'Soda Can', price: 1.49, icon: '🥤' },
+                { id: 'bv2', name: 'Water Bottle', price: 1.99, icon: '💧' },
+                { id: 'bv3', name: 'Juice 64oz', price: 4.49, icon: '🧃' },
+                { id: 'bv4', name: 'Sports Drink', price: 2.49, icon: '🏃' },
+                { id: 'bv5', name: 'Energy Drink', price: 2.99, icon: '⚡' },
+                { id: 'bv6', name: 'Coffee Large', price: 3.49, icon: '☕' }
+            ]
+        };
+
+        // ===== INITIALIZATION =====
+        window.onload = function() {
+            // Show splash for 2.5 seconds
+            setTimeout(() => {
+                document.getElementById('splash').classList.add('hidden');
+                document.getElementById('loginScreen').style.display = 'flex';
+            }, 2500);
+
+            // Update clock
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Load saved data
+            loadData();
+            
+            // Render initial items
+            renderItems();
+        };
+
+        // ===== CLOCK =====
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+
+        // ===== LOGIN =====
+        function enterPin(digit) {
+            if (store.pinBuffer.length < 4) {
+                store.pinBuffer += digit;
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            store.pinBuffer = '';
+            updatePinDisplay();
+        }
+
+        function updatePinDisplay() {
+            const display = document.getElementById('pinDisplay');
+            if (store.pinBuffer.length === 0) {
+                display.textContent = '_ _ _ _';
+            } else {
+                display.textContent = '• '.repeat(store.pinBuffer.length).trim() + ' _'.repeat(4 - store.pinBuffer.length).trim();
+            }
+        }
+
+        function submitLogin() {
+            const clerkSelect = document.getElementById('clerkSelect');
+            const clerk = clerkSelect.value;
+            
+            if (!clerk) {
+                alert('Please select a clerk');
+                return;
+            }
+            
+            if (store.pinBuffer !== '1234') {
+                alert('Invalid PIN');
+                store.pinBuffer = '';
+                updatePinDisplay();
+                return;
+            }
+
+            store.currentClerk = clerk;
+            document.getElementById('currentClerk').textContent = clerk.charAt(0).toUpperCase() + clerk.slice(1);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('posScreen').style.display = 'flex';
+            store.pinBuffer = '';
+            updatePinDisplay();
+        }
+
+        function logout() {
+            // Show splash
+            document.getElementById('splash').classList.remove('hidden');
+            document.getElementById('posScreen').style.display = 'none';
+            
+            setTimeout(() => {
+                store.currentClerk = null;
+                store.currentOrder = [];
+                renderOrder();
+                document.getElementById('splash').classList.add('hidden');
+                document.getElementById('loginScreen').style.display = 'flex';
+            }, 1500);
+        }
+
+        // ===== ITEM SELECTION =====
+        function selectCategory(category) {
+            store.currentCategory = category;
+            
+            // Update tabs
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderItems();
+        }
+
+        function renderItems() {
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+            
+            const items = itemsDB[store.currentCategory] || [];
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.onclick = () => addToOrder(item);
+                card.innerHTML = `
+                    <div class="icon">${item.icon}</div>
+                    <div class="name">${item.name}</div>
+                    <div class="price">$${item.price.toFixed(2)}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ===== ORDER MANAGEMENT =====
+        function addToOrder(item) {
+            const existing = store.currentOrder.find(i => i.id === item.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                store.currentOrder.push({ ...item, qty: 1 });
+            }
+            renderOrder();
+        }
+
+        function updateQty(index, delta) {
+            store.currentOrder[index].qty += delta;
+            if (store.currentOrder[index].qty <= 0) {
+                store.currentOrder.splice(index, 1);
+            }
+            renderOrder();
+        }
+
+        function renderOrder() {
+            const list = document.getElementById('orderList');
+            list.innerHTML = '';
+            
+            let subtotal = 0;
+            
+            store.currentOrder.forEach((item, index) => {
+                const itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `
+                    <div class="order-item-info">
+                        <div class="order-item-name">${item.name}</div>
+                        <div class="order-item-price">$${itemTotal.toFixed(2)}</div>
+                    </div>
+                    <div class="order-item-qty">
+                        <button class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            const tax = subtotal * store.taxRate;
+            const total = subtotal + tax;
+            
+            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('total').textContent = '$' + total.toFixed(2);
+        }
+
+        // ===== CHECKOUT =====
+        function showCheckout() {
+            if (store.currentOrder.length === 0) {
+                alert('No items in order');
+                return;
+            }
+            
+            const subtotal = store.currentOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const tax = subtotal * store.taxRate;
+            const total = subtotal + tax;
+            
+            document.getElementById('checkoutSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('checkoutTax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('checkoutTotal').textContent = '$' + total.toFixed(2);
+            
+            store.tenderAmount = '';
+            document.getElementById('tenderAmount').value = '';
+            
+            openModal('checkoutModal');
+        }
+
+        function selectPayment(method) {
+            store.selectedPayment = method;
+            document.querySelectorAll('.payment-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        function enterTender(digit) {
+            if (digit === '.' && store.tenderAmount.includes('.')) return;
+            if (store.tenderAmount.replace('.', '').length >= 6) return;
+            store.tenderAmount += digit;
+            document.getElementById('tenderAmount').value = store.tenderAmount;
+        }
+
+        function clearTender() {
+            store.tenderAmount = '';
+            document.getElementById('tenderAmount').value = '';
+        }
+
+        function backspaceTender() {
+            store.tenderAmount = store.tenderAmount.slice(0, -1);
+            document.getElementById('tenderAmount').value = store.tenderAmount;
+        }
+
+        function completeCheckout() {
+            const subtotal = store.currentOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const tax = subtotal * store.taxRate;
+            const total = subtotal + tax;
+            const tendered = parseFloat(store.tenderAmount) || 0;
+            
+            if (tendered < total && store.selectedPayment === 'cash') {
+                alert('Insufficient tender');
+                return;
+            }
+
+            // Save order to history
+            const order = {
+                id: store.orderCounter++,
+                items: [...store.currentOrder],
+                subtotal: subtotal,
+                tax: tax,
+                total: total,
+                tendered: tendered,
+                change: tendered - total,
+                payment: store.selectedPayment,
+                clerk: store.currentClerk,
+                timestamp: new Date().toISOString()
+            };
+            
+            store.orderHistory.push(order);
+            saveData();
+            
+            closeModal('checkoutModal');
+            showReceipt(order);
+        }
+
+        // ===== RECEIPT =====
+        function showReceipt(order) {
+            const content = document.getElementById('receiptContent');
+            content.innerHTML = `
+                <div class="receipt">
+                    <div class="receipt-header">
+                        <div class="receipt-title">👍 Reggie Starr</div>
+                        <div>RS-79 Point of Sale</div>
+                        <div>${new Date(order.timestamp).toLocaleString()}</div>
+                        <div>Order #${order.id}</div>
+                        <div>Clerk: ${order.clerk}</div>
+                    </div>
+                    ${order.items.map(item => `
+                        <div class="receipt-item">
+                            <span>${item.qty}x ${item.name}</span>
+                            <span>$${(item.price * item.qty).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <div class="receipt-total">
+                        <div class="receipt-item">
+                            <span>Subtotal:</span>
+                            <span>$${order.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Tax:</span>
+                            <span>$${order.tax.toFixed(2)}</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Total:</span>
+                            <span>$${order.total.toFixed(2)}</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span>${order.payment.toUpperCase()}:</span>
+                            <span>$${order.tendered.toFixed(2)}</span>
+                        </div>
+                        ${order.change > 0 ? `
+                        <div class="receipt-item">
+                            <span>Change:</span>
+                            <span>$${order.change.toFixed(2)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 12px;">
+                        Thank you for shopping with us!<br>
+                        Reggie Starr RS-79 POS
+                    </div>
+                </div>
+            `;
+            openModal('receiptModal');
+        }
+
+        function printReceipt() {
+            window.print();
+        }
+
+        function closeReceipt() {
+            closeModal('receiptModal');
+            store.currentOrder = [];
+            renderOrder();
+            document.getElementById('orderNumber').textContent = '#' + store.orderCounter;
+        }
+
+        // ===== HELD ORDERS =====
+        function holdOrder() {
+            if (store.currentOrder.length === 0) {
+                alert('No items to hold');
+                return;
+            }
+            
+            const heldOrder = {
+                id: store.orderCounter++,
+                items: [...store.currentOrder],
+                timestamp: new Date().toISOString(),
+                clerk: store.currentClerk
+            };
+            
+            store.heldOrders.push(heldOrder);
+            saveData();
+            
+            store.currentOrder = [];
+            renderOrder();
+            document.getElementById('orderNumber').textContent = '#' + store.orderCounter;
+            alert('Order held #' + heldOrder.id);
+        }
+
+        function showHeldOrders() {
+            if (store.heldOrders.length === 0) {
+                alert('No held orders');
+                return;
+            }
+            
+            const orderId = prompt('Held orders: ' + store.heldOrders.map(o => '#' + o.id).join(', ') + '\n\nEnter order ID to restore:');
+            if (!orderId) return;
+            
+            const held = store.heldOrders.find(o => o.id === parseInt(orderId));
+            if (held) {
+                store.currentOrder = [...held.items];
+                store.heldOrders = store.heldOrders.filter(o => o.id !== held.id);
+                renderOrder();
+                saveData();
+            } else {
+                alert('Order not found');
+            }
+        }
+
+        function showHistory() {
+            if (store.orderHistory.length === 0) {
+                alert('No order history');
+                return;
+            }
+            
+            const recent = store.orderHistory.slice(-5).map(o => 
+                `#${o.id} - $${o.total.toFixed(2)} - ${o.clerk} - ${new Date(o.timestamp).toLocaleTimeString()}`
+            ).join('\n');
+            
+            alert('Recent orders:\n' + recent);
+        }
+
+        // ===== UTILITIES =====
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function saveData() {
+            localStorage.setItem('reggieStarrData', JSON.stringify({
+                heldOrders: store.heldOrders,
+                orderHistory: store.orderHistory,
+                orderCounter: store.orderCounter
+            }));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('reggieStarrData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                store.heldOrders = data.heldOrders || [];
+                store.orderHistory = data.orderHistory || [];
+                store.orderCounter = data.orderCounter || 1001;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+</html>
