@@ -1,0 +1,269 @@
+{
+  "export_timestamp": "2026-06-08T10:09:00Z",
+  "export_version": "1.0.0",
+  "system": "DepotChaos",
+  "description": "Complete DepotChaos settings backup",
+
+  "databases": {
+    "depot_chaos": {
+      "path": "/root/.openclaw/workspace/DepotChaos/depot_chaos.db",
+      "description": "Vendor database for enrichment",
+      "tables": ["vendors", "vendor_interactions", "teriyaki_madness"],
+      "schema": {
+        "vendors": {
+          "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+          "name": "TEXT NOT NULL",
+          "dba_name": "TEXT",
+          "contact_name": "TEXT",
+          "phone": "TEXT",
+          "email": "TEXT",
+          "address": "TEXT",
+          "city": "TEXT",
+          "state": "TEXT",
+          "zip": "TEXT",
+          "territory": "TEXT",
+          "vendor_type": "TEXT",
+          "status": "TEXT DEFAULT 'active'",
+          "source_file": "TEXT",
+          "imported_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+          "last_contact_at": "TIMESTAMP",
+          "notes": "TEXT"
+        }
+      }
+    },
+    "unified": {
+      "path": "/root/.openclaw/workspace/data/depot_chaos/unified.db",
+      "description": "Main CRM unified database for leads and customers",
+      "tables": ["leads", "enriched_leads", "unified_leads", "ca_abc_licenses", "datadepot_intelligence", "psd_customers", "psd_customer_sales", "departments", "agents"],
+      "schema_version": "2.1"
+    }
+  },
+
+  "service_configurations": {
+    "depotchaos_fastapi": {
+      "service_file": "/etc/systemd/system/depotchaos-fastapi.service",
+      "port": 8082,
+      "host": "0.0.0.0",
+      "working_directory": "/root/.openclaw/workspace/datadepot/web",
+      "main_script": "/root/.openclaw/workspace/datadepot/web/depotchaos_fastapi.py",
+      "restart_policy": "always",
+      "restart_sec": 5,
+      "environment_variables": {
+        "PYTHONUNBUFFERED": "1",
+        "MAILGUN_TEST_MODE": "True",
+        "MAILGUN_DOMAIN": "psdepot.com"
+      },
+      "api_version": "1.1.0",
+      "cors": {
+        "allow_origins": ["*"],
+        "allow_credentials": true,
+        "allow_methods": ["*"],
+        "allow_headers": ["*"]
+      }
+    },
+    "depotchaos_flask": {
+      "service_file": "/etc/systemd/system/depotchaos.service",
+      "port": 8082,
+      "working_directory": "/root/.openclaw/workspace/datadepot/web",
+      "environment_variables": {
+        "FLASK_APP": "/root/.openclaw/workspace/datadepot/web/depotchaos_api.py",
+        "FLASK_ENV": "production",
+        "PYTHONUNBUFFERED": "1",
+        "MAILGUN_API_KEY": "${MAILGUN_API_KEY}",
+        "MAILGUN_DOMAIN": "psdepot.com"
+      }
+    },
+    "depotchaos_auto_enrichment": {
+      "service_file": "/etc/systemd/system/depotchaos-enrichment.service",
+      "script": "/root/.openclaw/workspace/DepotChaos/auto_enrichment_daemon.py",
+      "restart_policy": "always",
+      "restart_sec": 60
+    }
+  },
+
+  "nginx_configurations": {
+    "depotchaos_subdomain": {
+      "domain": "depotchaos.psdepot.com",
+      "ssl_certificate": "/etc/letsencrypt/live/psdepot.com/fullchain.pem",
+      "ssl_certificate_key": "/etc/letsencrypt/live/psdepot.com/privkey.pem",
+      "root": "/var/www/psdepot.com/depotchaos",
+      "index": "index.html",
+      "proxy_routes": {
+        "/api": "http://localhost:8082"
+      },
+      "security_headers": {
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block"
+      }
+    },
+    "psdepot_com_main": {
+      "domain": "psdepot.com",
+      "depotchaos_routes": {
+        "/depotchaos/api/": "http://127.0.0.1:8082/api/",
+        "/depotchaos": "/var/www/psdepot.com/depotchaos"
+      }
+    }
+  },
+
+  "static_files": {
+    "web_root": "/var/www/psdepot.com/depotchaos",
+    "index_html": "/var/www/psdepot.com/depotchaos/index.html",
+    "assets": "/var/www/psdepot.com/depotchaos/static"
+  },
+
+  "api_endpoints": {
+    "core": {
+      "GET /api/stats": "Database statistics",
+      "GET /api/leads": "Get leads with filtering and pagination",
+      "POST /api/leads": "Create new lead",
+      "GET /api/leads/{id}": "Get single lead details",
+      "PUT /api/leads/{id}": "Update lead",
+      "DELETE /api/leads/{id}": "Delete lead (soft/hard)",
+      "GET /api/intelligence": "CA ABC intelligence data",
+      "GET /api/intelligence/{id}": "Single intelligence record",
+      "DELETE /api/intelligence/{id}": "Delete intelligence record",
+      "PUT /api/intelligence/{id}": "Update intelligence record",
+      "GET /api/counties": "List of counties with counts",
+      "GET /api/pos-systems": "POS system breakdown",
+      "GET /api/activities": "Recent activities",
+      "GET /api/calendar": "Scheduled callbacks calendar"
+    },
+    "email": {
+      "POST /api/queue": "Add email to queue",
+      "GET /api/queue": "Get email queue status",
+      "POST /api/queue/{id}/send": "Send queued email immediately",
+      "POST /api/queue/{id}/cancel": "Cancel queued email",
+      "GET /api/queue/{id}/preview": "Preview email content",
+      "GET /api/queue/{id}/status": "Get email status",
+      "GET /api/emails/recent": "Recent email activity"
+    },
+    "enrichment": {
+      "GET /api/enrichment": "Vendor enrichment data",
+      "GET /api/enrichment/{id}": "Single vendor details",
+      "POST /api/enrichment/{id}/run": "Run single enrichment",
+      "POST /api/enrichment/run": "Run batch enrichment",
+      "PUT /api/enrichment/{id}": "Update vendor",
+      "DELETE /api/enrichment/{id}": "Delete vendor",
+      "POST /api/enrichment/{id}/promote": "Promote vendor to lead"
+    }
+  },
+
+  "integrations": {
+    "mailgun": {
+      "domain": "psdepot.com",
+      "test_mode": true,
+      "features": ["tracking", "clicks"]
+    },
+    "yelp": {
+      "cache_file": "/root/.openclaw/workspace/DepotChaos/yelp_cache.json",
+      "enrichment_script": "/root/.openclaw/workspace/DepotChaos/yelp_enrichment.py"
+    }
+  },
+
+  "crm_settings": {
+    "tier_categories": [
+      "Stone",
+      "PPCL (Bronze)",
+      "Prime (Silver)",
+      "Spot On Target (Gold)",
+      "Top 165 (Platinum/Diamond)"
+    ],
+    "lead_statuses": [
+      "new",
+      "contacted",
+      "qualified",
+      "proposal",
+      "converted",
+      "nurture",
+      "dead"
+    ],
+    "source_types": [
+      "DepotChaos_Enriched",
+      "DepotChaos_Vendor",
+      "manual_entry",
+      "datadepot",
+      "scrape"
+    ]
+  },
+
+  "lead_tier_criteria": {
+    "Stone": "Revenue-based tier - supply only (base tier)",
+    "PPCL_Bronze": "$5K-$10K spend",
+    "Prime_Silver": "$10K-$25K spend",
+    "Spot_On_Target_Gold": "$25K-$50K spend",
+    "Top_165_Platinum_Diamond": "$50K+ spend"
+  },
+
+  "scripts": {
+    "enrichment": [
+      "/root/.openclaw/workspace/DepotChaos/yelp_enrichment.py",
+      "/root/.openclaw/workspace/DepotChaos/export_for_enrichment.py",
+      "/root/.openclaw/workspace/DepotChaos/import_enriched.py",
+      "/root/.openclaw/workspace/scripts/depotchaos_enrichment_master.py",
+      "/root/.openclaw/workspace/scripts/depotchaos_enrichment_agent.py",
+      "/root/.openclaw/workspace/scripts/enrich_depotchaos_real.py",
+      "/root/.openclaw/workspace/scripts/enrich_depotchaos_real_contacts.py"
+    ],
+    "import": [
+      "/root/.openclaw/workspace/DepotChaos/import_state_leads.py",
+      "/root/.openclaw/workspace/scripts/import_restaurants_to_depotchaos.py",
+      "/root/.openclaw/workspace/scripts/load_vendors_to_depotchaos.py",
+      "/root/.openclaw/workspace/scripts/import_abc_to_depotchaos.py"
+    ],
+    "cron": [
+      "/root/.openclaw/workspace/DepotChaos/auto_enrichment_daemon.py"
+    ]
+  },
+
+  "urls": {
+    "crm_interface": "https://psdepot.com/depotchaos/index.html",
+    "direct_api": "https://psdepot.com/api/stats",
+    "subdomain": "https://depotchaos.psdepot.com",
+    "api_base": "https://depotchaos.psdepot.com/api"
+  },
+
+  "directories": {
+    "depotchaos_root": "/root/.openclaw/workspace/DepotChaos",
+    "enrichment_queue": "/root/.openclaw/workspace/DepotChaos/enrichment_queue",
+    "web_root": "/var/www/psdepot.com/depotchaos",
+    "datadepot_web": "/root/.openclaw/workspace/datadepot/web",
+    "scripts": "/root/.openclaw/workspace/scripts",
+    "agent_sandboxes": "/root/.openclaw/workspace/agent_sandboxes"
+  },
+
+  "central_hub": {
+    "enabled": true,
+    "email_enabled": true,
+    "postfix_active": true,
+    "configured_addresses": [
+      "miles@myl0nr0s.cloud",
+      "antonio.hudnall@gmail.com",
+      "performancedepot@gmail.com"
+    ],
+    "teams": [
+      {"name": "Marketing", "lead": "Aurora"},
+      {"name": "Sales Outreach", "lead": "Miles"},
+      {"name": "Operations", "lead": "Patricia"},
+      {"name": "Creative", "lead": "Forge"},
+      {"name": "Finance", "lead": "Cryptonio"},
+      {"name": "BHSI", "lead": "Velum"},
+      {"name": "Support", "lead": "Concierge"}
+    ]
+  },
+
+  "factory_integration": {
+    "status": "awaiting_factory_online",
+    "integration_points": [
+      "Factory API → DepotChaos → Marketing (promotions)",
+      "Factory API → DepotChaos → Sales (availability)",
+      "Factory API → DepotChaos → Finance (cost/revenue)"
+    ]
+  },
+
+  "backup_info": {
+    "last_db_backup": "/root/.openclaw/workspace/data/depot_chaos/unified_backup_20260509_053801.db",
+    "backup_location": "/root/.openclaw/workspace/data/depot_chaos/",
+    "auto_backup": "daily"
+  }
+}

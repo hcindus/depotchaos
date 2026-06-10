@@ -1,0 +1,392 @@
+{
+  "export_timestamp": "2026-06-08T10:13:00Z",
+  "export_version": "1.0.0",
+  "system": "DepotChaos Database Configuration",
+
+  "databases": [
+    {
+      "name": "depot_chaos",
+      "description": "Vendor database for enrichment",
+      "path": "/root/.openclaw/workspace/DepotChaos/depot_chaos.db",
+      "type": "SQLite",
+      "size_mb": null,
+      "tables": [
+        {
+          "name": "vendors",
+          "description": "Main vendor records from data imports",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "name", "type": "TEXT", "constraints": "NOT NULL"},
+            {"name": "dba_name", "type": "TEXT"},
+            {"name": "contact_name", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "email", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "territory", "type": "TEXT"},
+            {"name": "vendor_type", "type": "TEXT"},
+            {"name": "status", "type": "TEXT", "default": "'active'"},
+            {"name": "source_file", "type": "TEXT"},
+            {"name": "imported_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+            {"name": "last_contact_at", "type": "TIMESTAMP"},
+            {"name": "notes", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "vendor_interactions",
+          "description": "Interaction history with vendors",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "vendor_id", "type": "INTEGER", "foreign_key": "vendors(id)"},
+            {"name": "interaction_type", "type": "TEXT"},
+            {"name": "content", "type": "TEXT"},
+            {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "teriyaki_madness",
+          "description": "Teriyaki Madness franchise locations",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY"},
+            {"name": "store_id", "type": "INTEGER", "constraints": "UNIQUE"},
+            {"name": "store_name", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "status", "type": "TEXT"},
+            {"name": "latitude", "type": "REAL"},
+            {"name": "longitude", "type": "REAL"},
+            {"name": "timezone", "type": "TEXT"},
+            {"name": "order_url", "type": "TEXT"},
+            {"name": "created_at", "type": "DATETIME", "default": "CURRENT_TIMESTAMP"},
+            {"name": "updated_at", "type": "DATETIME", "default": "CURRENT_TIMESTAMP"}
+          ],
+          "indexes": [
+            {"name": "idx_tm_state", "columns": ["state"]},
+            {"name": "idx_tm_city", "columns": ["city"]},
+            {"name": "idx_tm_zip", "columns": ["zip"]},
+            {"name": "idx_tm_status", "columns": ["status"]}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unified",
+      "description": "Main CRM unified database for leads, customers, and intelligence",
+      "path": "/root/.openclaw/workspace/data/depot_chaos/unified.db",
+      "type": "SQLite",
+      "size_mb": null,
+      "tables": [
+        {
+          "name": "leads",
+          "description": "Primary leads table",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "business_name", "type": "TEXT", "constraints": "NOT NULL"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "email", "type": "TEXT"},
+            {"name": "business_type", "type": "TEXT"},
+            {"name": "priority", "type": "TEXT"},
+            {"name": "source", "type": "TEXT"},
+            {"name": "scraped_at", "type": "TEXT"},
+            {"name": "enriched_at", "type": "TEXT"},
+            {"name": "enrichment_status", "type": "TEXT", "default": "'pending'"},
+            {"name": "country", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "category", "type": "TEXT"},
+            {"name": "sub_region", "type": "TEXT"},
+            {"name": "lead_score", "type": "INTEGER"},
+            {"name": "naics_code", "type": "TEXT"},
+            {"name": "employee_count", "type": "TEXT"},
+            {"name": "tax_id", "type": "TEXT"},
+            {"name": "deleted", "type": "INTEGER", "default": "0"},
+            {"name": "pos_system", "type": "TEXT"},
+            {"name": "status", "type": "TEXT", "default": "'new'"},
+            {"name": "tier", "type": "TEXT"},
+            {"name": "created_at", "type": "TEXT"},
+            {"name": "datadepot_intelligence", "type": "TEXT"},
+            {"name": "callback_date", "type": "TEXT"},
+            {"name": "callback_notes", "type": "TEXT"},
+            {"name": "company_name", "type": "TEXT"},
+            {"name": "contact_name", "type": "TEXT"},
+            {"name": "contact_title", "type": "TEXT"},
+            {"name": "owner_name", "type": "TEXT"},
+            {"name": "county", "type": "TEXT"},
+            {"name": "enrichment_data", "type": "TEXT"},
+            {"name": "source_type", "type": "TEXT"},
+            {"name": "pos_confidence", "type": "TEXT"},
+            {"name": "equipment_age", "type": "TEXT"},
+            {"name": "replacement_score", "type": "INTEGER"},
+            {"name": "review_sentiment", "type": "TEXT"},
+            {"name": "pos_mentions", "type": "INTEGER"},
+            {"name": "campaign_id", "type": "TEXT"},
+            {"name": "sequence_day", "type": "INTEGER"},
+            {"name": "email_sent", "type": "BOOLEAN", "default": "0"},
+            {"name": "email_opened", "type": "BOOLEAN", "default": "0"},
+            {"name": "email_clicked", "type": "BOOLEAN", "default": "0"},
+            {"name": "demo_scheduled", "type": "BOOLEAN", "default": "0"},
+            {"name": "converted", "type": "BOOLEAN", "default": "0"},
+            {"name": "assigned_agent", "type": "TEXT"},
+            {"name": "notes", "type": "TEXT"},
+            {"name": "last_contact", "type": "TEXT"},
+            {"name": "next_contact", "type": "TEXT"},
+            {"name": "converted_at", "type": "TEXT"},
+            {"name": "is_customer", "type": "BOOLEAN", "default": "0"},
+            {"name": "customer_since", "type": "TEXT"},
+            {"name": "sos_url", "type": "TEXT"},
+            {"name": "tags", "type": "TEXT"}
+          ],
+          "indexes": [
+            {"name": "idx_state", "columns": ["state"]},
+            {"name": "idx_source", "columns": ["source"]},
+            {"name": "idx_enrichment", "columns": ["enrichment_status"]},
+            {"name": "idx_datadepot_tier", "columns": ["tier"]},
+            {"name": "idx_datadepot_score", "columns": ["replacement_score"]},
+            {"name": "idx_datadepot_pos", "columns": ["pos_system"]},
+            {"name": "idx_datadepot_campaign", "columns": ["campaign_id"]}
+          ],
+          "unique_constraints": ["business_name, city, state"]
+        },
+        {
+          "name": "enriched_leads",
+          "description": "Enriched lead data with additional fields",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "lead_id", "type": "INTEGER", "foreign_key": "leads(id)"},
+            {"name": "company_name", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "email", "type": "TEXT"},
+            {"name": "website", "type": "TEXT"},
+            {"name": "pos_system", "type": "TEXT"},
+            {"name": "replacement_score", "type": "INTEGER"},
+            {"name": "estimated_volume", "type": "TEXT"},
+            {"name": "status", "type": "TEXT"},
+            {"name": "enriched_at", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "unified_leads",
+          "description": "Unified lead view for cross-source data",
+          "columns": [
+            {"name": "id", "type": "TEXT", "constraints": "PRIMARY KEY"},
+            {"name": "business_name", "type": "TEXT"},
+            {"name": "business_type", "type": "TEXT"},
+            {"name": "owner_name", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "county", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "email", "type": "TEXT"},
+            {"name": "website", "type": "TEXT"},
+            {"name": "priority", "type": "TEXT"},
+            {"name": "source", "type": "TEXT"},
+            {"name": "scraped_at", "type": "TEXT"},
+            {"name": "enrichment_status", "type": "TEXT"},
+            {"name": "discovered_at", "type": "TEXT"},
+            {"name": "status", "type": "TEXT"},
+            {"name": "uploaded_at", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "ca_abc_licenses",
+          "description": "California ABC license data",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "license_number", "type": "TEXT", "constraints": "UNIQUE"},
+            {"name": "license_type", "type": "TEXT"},
+            {"name": "license_type_name", "type": "TEXT"},
+            {"name": "status", "type": "TEXT"},
+            {"name": "business_name", "type": "TEXT"},
+            {"name": "owner_name", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "county", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "issue_date", "type": "TEXT"},
+            {"name": "expiration_date", "type": "TEXT"},
+            {"name": "scraped_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+          ],
+          "indexes": [
+            {"name": "idx_abc_license_number", "columns": ["license_number"]},
+            {"name": "idx_abc_county", "columns": ["county"]},
+            {"name": "idx_abc_type", "columns": ["license_type"]},
+            {"name": "idx_abc_status", "columns": ["status"]}
+          ]
+        },
+        {
+          "name": "datadepot_intelligence",
+          "description": "CA ABC intelligence enriched with replacement scoring",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY"},
+            {"name": "business_name", "type": "TEXT"},
+            {"name": "license_number", "type": "TEXT"},
+            {"name": "source", "type": "TEXT"},
+            {"name": "data", "type": "TEXT"},
+            {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+            {"name": "county", "type": "TEXT"},
+            {"name": "replacement_score", "type": "INTEGER"},
+            {"name": "pos_system", "type": "TEXT"},
+            {"name": "owner_name", "type": "TEXT"},
+            {"name": "address", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "state", "type": "TEXT"},
+            {"name": "zip", "type": "TEXT"},
+            {"name": "phone", "type": "TEXT"},
+            {"name": "license_status", "type": "TEXT"},
+            {"name": "issue_date", "type": "TEXT"},
+            {"name": "expiration_date", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "psd_customers",
+          "description": "Performance Supply Depot customers",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY"},
+            {"name": "name", "type": "TEXT"},
+            {"name": "status", "type": "TEXT", "default": "'active'"},
+            {"name": "category", "type": "TEXT"},
+            {"name": "last_contact", "type": "TEXT"},
+            {"name": "system_type", "type": "TEXT"},
+            {"name": "city", "type": "TEXT"},
+            {"name": "tier", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "psd_customer_sales",
+          "description": "Customer sales history",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY"},
+            {"name": "customer_id", "type": "INTEGER", "foreign_key": "psd_customers(id)"},
+            {"name": "year", "type": "INTEGER"},
+            {"name": "month", "type": "TEXT"},
+            {"name": "amount", "type": "REAL"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "scrape_runs",
+          "description": "Scraping operation logs",
+          "columns": [
+            {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY AUTOINCREMENT"},
+            {"name": "region", "type": "TEXT"},
+            {"name": "started_at", "type": "TEXT"},
+            {"name": "completed_at", "type": "TEXT"},
+            {"name": "leads_count", "type": "INTEGER"},
+            {"name": "status", "type": "TEXT"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "departments",
+          "description": "Organizational departments",
+          "columns": [
+            {"name": "id", "type": "TEXT", "constraints": "PRIMARY KEY"},
+            {"name": "name", "type": "TEXT", "constraints": "NOT NULL"},
+            {"name": "head_agent", "type": "TEXT"},
+            {"name": "status", "type": "TEXT", "default": "'active'"},
+            {"name": "priority", "type": "INTEGER", "default": "5"}
+          ],
+          "indexes": []
+        },
+        {
+          "name": "agents",
+          "description": "Agent/employee records",
+          "columns": [
+            {"name": "id", "type": "TEXT", "constraints": "PRIMARY KEY"},
+            {"name": "name", "type": "TEXT", "constraints": "NOT NULL"},
+            {"name": "department_id", "type": "TEXT", "foreign_key": "departments(id)"},
+            {"name": "role", "type": "TEXT"},
+            {"name": "level", "type": "TEXT", "default": "'employee'"},
+            {"name": "status", "type": "TEXT", "default": "'active'"}
+          ],
+          "indexes": []
+        }
+      ]
+    }
+  ],
+
+  "database_connection_settings": {
+    "depot_chaos_db": {
+      "connection_string": "sqlite:///root/.openclaw/workspace/DepotChaos/depot_chaos.db",
+      "row_factory": "sqlite3.Row",
+      "timeout": 30
+    },
+    "unified_db": {
+      "connection_string": "sqlite:///root/.openclaw/workspace/data/depot_chaos/unified.db",
+      "row_factory": "sqlite3.Row",
+      "timeout": 30
+    },
+    "api_database_path": "/root/.openclaw/workspace/data/depot_chaos/unified.db"
+  },
+
+  "enrichment_queue_db": {
+    "path": "/root/.openclaw/workspace/DepotChaos/enrichment_queue/queue.db",
+    "description": "SQLite queue for enrichment operations"
+  },
+
+  "tier_definitions": {
+    "Stone": {
+      "description": "Revenue-based tier - supply only",
+      "min_spend": 0,
+      "max_spend": 4999
+    },
+    "PPCL_Bronze": {
+      "description": "Bronze tier",
+      "min_spend": 5000,
+      "max_spend": 9999
+    },
+    "Prime_Silver": {
+      "description": "Silver tier",
+      "min_spend": 10000,
+      "max_spend": 24999
+    },
+    "Spot_On_Target_Gold": {
+      "description": "Gold tier",
+      "min_spend": 25000,
+      "max_spend": 49999
+    },
+    "Top_165_Platinum_Diamond": {
+      "description": "Platinum/Diamond tier",
+      "min_spend": 50000,
+      "max_spend": null
+    }
+  },
+
+  "status_definitions": {
+    "lead_statuses": ["new", "contacted", "qualified", "proposal", "converted", "nurture", "dead"],
+    "enrichment_statuses": ["pending", "enriched", "not_found", "failed"],
+    "vendor_statuses": ["active", "promoted", "contacted", "inactive"]
+  },
+
+  "backup_config": {
+    "location": "/root/.openclaw/workspace/data/depot_chaos/",
+    "naming_pattern": "unified_backup_YYYYMMDD_HHMMSS.db",
+    "last_backup": "unified_backup_20260509_053801.db",
+    "schedule": "daily"
+  },
+
+  "sql_snippets": {
+    "get_lead_count": "SELECT COUNT(*) FROM leads WHERE deleted = 0",
+    "get_leads_by_tier": "SELECT tier, COUNT(*) FROM leads WHERE tier IS NOT NULL AND deleted = 0 GROUP BY tier",
+    "get_enriched_vendors": "SELECT COUNT(*) FROM vendors WHERE notes LIKE '%Yelp Enriched%'",
+    "soft_delete_lead": "UPDATE leads SET deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
+    "get_active_customers": "SELECT * FROM psd_customers WHERE status = 'active'"
+  }
+}
