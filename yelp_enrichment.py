@@ -13,9 +13,9 @@ import requests
 from datetime import datetime
 from pathlib import Path
 
-DB_PATH = "/root/.openclaw/workspace/aoscros_brain/DepotChaos/depot_chaos.db"
+DB_PATH = "/root/.openclaw/workspace/DepotChaos/depot_chaos.db"
 LOG_FILE = "/var/log/aos/yelp_enrichment.log"
-CACHE_FILE = "/root/.openclaw/workspace/aoscros_brain/DepotChaos/yelp_cache.json"
+CACHE_FILE = "/root/.openclaw/workspace/DepotChaos/yelp_cache.json"
 
 YELP_API_KEY = os.environ.get('YELP_API_KEY', '5DUaC-eBObfSXkjf4YfLNlViO-WqwwCk0UJYewfhav25gbTrCaPvPR_nhokKyfBNKnduMHkqd5Z_v_0RwHSj2fXs8ziaJ-O_RAkuRvc6L6Lt9dwEboKoYHBpBuL1aXYx')
 
