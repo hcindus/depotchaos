@@ -1,2 +1,6 @@
 depot_chaos.db
+depot_chaos.db.bak*
 yelp_cache.json
+enrich_last_run.json
+enrich_log.json
+enrich_run*.log
